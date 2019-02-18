@@ -5,10 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Projekat3"
         mc:Ignorable="d"
-        Title="MainWindow" Height="700" Width="700" Loaded="Window_Loaded">
-    <Grid Width="600" Height="600">
+        Title="MainWindow" Height="800" Width="1100" Loaded="Window_Loaded">
+    <Grid Width="1000" Height="750">
         <ScrollViewer x:Name="MyScroller" CanContentScroll="True" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible">
-            <Canvas Width="600" Height="600" x:Name="map" VerticalAlignment="Top" MouseWheel="Canvas_MouseWheel">
+            <Canvas Width="1800" Height="1800" x:Name="map" VerticalAlignment="Top" MouseWheel="Canvas_MouseWheel">
                 <Canvas.Background>
                     <DrawingBrush TileMode="Tile" Viewport="0,0,6,6" ViewportUnits="Absolute">
                         <DrawingBrush.Drawing>

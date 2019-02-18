@@ -24,11 +24,13 @@ namespace Projekat3
     public partial class MainWindow : Window
     {
         Substations subs;
-        Ellipse[,] ellipses = new Ellipse[101,101];
+        //Ellipse[,] ellipses = new Ellipse[301,301];
+        bool[,] ellipsesBool = new bool[301, 301];
         ScaleTransform st = new ScaleTransform();
         Dictionary<string, Tuple<int, int>> idPosition = new Dictionary<string, Tuple<int, int>>();
         int[,] visitedmap;
         List<LineMapEntity> allLines;
+        List<Ellipse> ellipses = new List<Ellipse>();
         struct direction
         {
             public int x;
@@ -60,10 +62,11 @@ namespace Projekat3
             int y = -2;
 
             SolidColorBrush mySolidColorBrush = new SolidColorBrush();
-            for(int i = 0; i < 101; i++)
+            for(int i = 0; i < 301; i++)
             {
-                for(int j = 0; j < 101; j++)
+                for(int j = 0; j < 301; j++)
                 {
+                    /*
                     ellipses[i, j] = new Ellipse();
                     ellipses[i, j].Visibility = Visibility.Collapsed;
                     //ellipses[i, j].Visibility = Visibility.Visible;
@@ -75,6 +78,8 @@ namespace Projekat3
                     Canvas.SetLeft(ellipses[i, j], x);
                     x = x + 6;
                     map.Children.Add(ellipses[i,j]);
+                    */
+                    ellipsesBool[i, j] = false;
                     
                 }
                 x = -2;
@@ -185,13 +190,13 @@ namespace Projekat3
             double maxY = 19.96;
             double tempY;
             double Y = maxY - minY;
-            Y = Y / 100;
+            Y = Y / 300;
             int dotY;
             double minX = 45.189;
             double maxX = 45.33;
             double tempX;
             double X = maxX - minX;
-            X = X / 100;
+            X = X / 300;
             int dotX;
             bool check = true;
             int counter = 1;
@@ -201,59 +206,87 @@ namespace Projekat3
             dotY = (int)(tempY / Y);
             tempX = maxX - x;// - minX;
             dotX = (int)(tempX / X);
-            if (ellipses[dotX, dotY].IsVisible)
+            if (ellipsesBool[dotX, dotY])
             {
                 while (check)
                 {
                     if (dotX - counter >= 0)
                     {
-                        if (ellipses[dotX - counter, dotY].Visibility ==  Visibility.Collapsed)
+                        if (!ellipsesBool[dotX - counter, dotY])
                         {
-                            ellipses[dotX - counter, dotY].Visibility = Visibility.Visible;
-                            ellipses[dotX - counter, dotY].ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
-                            ellipses[dotX - counter, dotY].Fill = brush;
-                            ellipses[dotX - counter, dotY].Stroke = brush;
+                            Ellipse ellipse = new Ellipse();
+                            ellipsesBool[dotX - counter, dotY] = true;
+                            ellipse.ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
+                            ellipse.Fill = brush;
+                            ellipse.Stroke = brush;
+                            Canvas.SetLeft(ellipse, (dotY) * 6 - 2);
+                            Canvas.SetTop(ellipse, (dotX-counter) * 6 - 2);
                             idPosition.Add(id, new Tuple<int, int>(dotX - counter, dotY));
                             check = false;
+                            ellipse.Height = 4;
+                            ellipse.Width = 4;
+                            //map.Children.Add(ellipse);
+                            ellipses.Add(ellipse);
                             continue;
                         }
                     }
                     if (dotY - counter >= 0)
                     {
-                        if (ellipses[dotX, dotY - counter].Visibility == Visibility.Collapsed)
+                        if (!ellipsesBool[dotX, dotY - counter])
                         {
-                            ellipses[dotX, dotY - counter].Visibility = Visibility.Visible;
-                            ellipses[dotX, dotY - counter].ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
-                            ellipses[dotX, dotY - counter].Fill = brush;
-                            ellipses[dotX, dotY - counter].Stroke = brush;
-                            idPosition.Add(id, new Tuple<int, int>(dotX, dotY - counter));
+                            Ellipse ellipse = new Ellipse();
+                            ellipsesBool[dotX, dotY-counter] = true;
+                            ellipse.ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
+                            ellipse.Fill = brush;
+                            ellipse.Stroke = brush;
+                            Canvas.SetLeft(ellipse, (dotY-counter)*6 - 2);
+                            Canvas.SetTop(ellipse, dotX*6 - 2);
+                            idPosition.Add(id, new Tuple<int, int>(dotX, dotY-counter));
                             check = false;
+                            ellipse.Height = 4;
+                            ellipse.Width = 4;
+                            //map.Children.Add(ellipse);
+                            ellipses.Add(ellipse);
                             continue;
                         }
                     }
-                    if (dotX + counter <= 100)
+                    if (dotX + counter <= 300)
                     {
-                        if (ellipses[dotX + counter, dotY].Visibility == Visibility.Collapsed)
+                        if (!ellipsesBool[dotX + counter, dotY])
                         {
-                            ellipses[dotX + counter, dotY].Visibility = Visibility.Visible;
-                            ellipses[dotX + counter, dotY].ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
-                            ellipses[dotX + counter, dotY].Fill = brush;
-                            ellipses[dotX + counter, dotY].Stroke = brush;
+                            Ellipse ellipse = new Ellipse();
+                            ellipsesBool[dotX + counter, dotY] = true;
+                            ellipse.ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
+                            ellipse.Fill = brush;
+                            ellipse.Stroke = brush;
+                            Canvas.SetLeft(ellipse, (dotY) * 6 - 2);
+                            Canvas.SetTop(ellipse, (dotX + counter) * 6 - 2);
                             idPosition.Add(id, new Tuple<int, int>(dotX + counter, dotY));
                             check = false;
+                            ellipse.Height = 4;
+                            ellipse.Width = 4;
+                            //map.Children.Add(ellipse);
+                            ellipses.Add(ellipse);
                             continue;
                         }
                     }
-                    if (dotY + counter <= 100)
+                    if (dotY + counter <= 300)
                     {
-                        if (ellipses[dotX, dotY + counter].Visibility == Visibility.Collapsed)
+                        if (!ellipsesBool[dotX, dotY + counter])
                         {
-                            ellipses[dotX, dotY + counter].Visibility = Visibility.Visible;
-                            ellipses[dotX, dotY + counter].ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" +name);
-                            ellipses[dotX, dotY + counter].Fill = brush;
-                            ellipses[dotX, dotY + counter].Stroke = brush;
+                            Ellipse ellipse = new Ellipse();
+                            ellipsesBool[dotX, dotY + counter] = true;
+                            ellipse.ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
+                            ellipse.Fill = brush;
+                            ellipse.Stroke = brush;
+                            Canvas.SetLeft(ellipse, (dotY + counter) * 6 - 2);
+                            Canvas.SetTop(ellipse, dotX * 6 - 2);
                             idPosition.Add(id, new Tuple<int, int>(dotX, dotY + counter));
                             check = false;
+                            ellipse.Height = 4;
+                            ellipse.Width = 4;
+                            //map.Children.Add(ellipse);
+                            ellipses.Add(ellipse);
                             continue;
                         }
                     }
@@ -262,11 +295,19 @@ namespace Projekat3
             }
             else
             {
-                ellipses[dotX, dotY].Visibility = Visibility.Visible;
-                ellipses[dotX, dotY].ToolTip = String.Format("ID:_" +id + "_\n" + "Name:" + name);
-                ellipses[dotX, dotY].Fill = brush;
-                ellipses[dotX, dotY].Stroke = brush;
+                Ellipse ellipse = new Ellipse();
+                ellipsesBool[dotX, dotY] = true;
+                ellipse.ToolTip = String.Format("ID:_" +id + "_\n" + "Name:" + name);
+                ellipse.Fill = brush;
+                ellipse.Stroke = brush;
+                ellipse.Height = 4;
+                ellipse.Width = 4;
+
+                Canvas.SetLeft(ellipse, (dotY) * 6 - 2);
+                Canvas.SetTop(ellipse, dotX * 6 - 2);
                 idPosition.Add(id, new Tuple<int, int>(dotX, dotY));
+                //map.Children.Add(ellipse);
+                ellipses.Add(ellipse);
             }
         }
 
@@ -286,6 +327,7 @@ namespace Projekat3
 
         private void AddLines()
         {
+            List<Position> positions = new List<Position>();
             foreach(LineEntity line in subs.LineEntities)
             {
                 if (!idPosition.ContainsKey(line.FirstEnd) || !idPosition.ContainsKey(line.SecondEnd))
@@ -299,7 +341,8 @@ namespace Projekat3
                 startPosition.parent = null;
 
                 string endPosition = line.SecondEnd;
-                startPosition = BFS(startPosition, ellipses, endPosition);
+                startPosition = BFS(startPosition, endPosition);
+                positions.Add(startPosition);
 
                 while (startPosition != null)
                 {
@@ -322,11 +365,11 @@ namespace Projekat3
                         {
                             lineExists = true;
                             break;
+                        }else if (myLine.X1 == x2 && myLine.Y1 == y2 && myLine.X2 == x1 && myLine.Y2 == y1)
+                        {
+                            lineExists = true;
+                            break;
                         }
-                    }
-                    foreach(LineMapEntity myLine in allLines)
-                    {
-
                     }
 
                     if (!lineExists)
@@ -347,21 +390,19 @@ namespace Projekat3
                     startPosition = startPosition.parent;
                 }
             }
+            foreach(Ellipse ellipse in ellipses)
+            {
+                map.Children.Add(ellipse);
+            }
+
         }
-        private Position BFS(Position present, Ellipse[,] map, string who)
+        private Position BFS(Position present, string who)
         {
             Position[] poses = new Position[] { present };
-            bool found = false;
-            while (!found)
+            while (true)
             {
                 foreach(Position pos in poses)
                 {
-                       /* string[] id = ellipses[pos.row, pos.col].ToolTip.ToString().Split('_');
-                        if (id[1].Equals(who))
-                        {
-                            visitedmap = resetVisitedMap();
-                            return pos;
-                        }*/
                     if(idPosition[who].Item1 == pos.row && idPosition[who].Item2 == pos.col)
                     {
                         visitedmap = resetVisitedMap();
@@ -376,11 +417,11 @@ namespace Projekat3
 
         private int[,] resetVisitedMap()
         {
-            int[,] returnArray = new int[101, 101];
+            int[,] returnArray = new int[301, 301];
 
-            for (int i = 0; i < 101; i++)
+            for (int i = 0; i < 301; i++)
             {
-                for (int j = 0; j < 101; j++)
+                for (int j = 0; j < 301; j++)
                 {
                     returnArray[i, j] = 0;
                 }
@@ -399,7 +440,7 @@ namespace Projekat3
             {
                 int rowCalculated = pos.row + dir.x;
                 int colCalculated = pos.col + dir.y;
-                if (rowCalculated >= 0 && colCalculated >= 0 && rowCalculated < ellipses.GetLength(0) && colCalculated < ellipses.GetLength(1) && !visited(rowCalculated, colCalculated))
+                if (rowCalculated >= 0 && colCalculated >= 0 && rowCalculated < ellipsesBool.GetLength(0) && colCalculated < ellipsesBool.GetLength(1) && !visited(rowCalculated, colCalculated))
                 {
                     visitedmap[rowCalculated, colCalculated] = 1;
                     Position posPath = new Position();

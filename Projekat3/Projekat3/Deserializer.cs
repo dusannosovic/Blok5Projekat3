@@ -11,7 +11,7 @@ namespace Projekat2
 {
     static public class Deserializer
     {
-        static readonly string path = @"G:\8.semestar\Grafika\Blok5Projekat3\Projekat3\Geographic.Xml";
+        static readonly string path = @"C:\Users\pc\Desktop\Blok5Projekat3\Projekat3\Geographic.Xml";
         static StreamReader reader;
         public static Substations DeserializeSubs()
         {

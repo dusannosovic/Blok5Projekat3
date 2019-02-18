@@ -1,5 +1,6 @@
 ﻿using Projekat2;
 using Projekat2.Models;
+using Projekat3.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,21 @@ namespace Projekat3
         Substations subs;
         Ellipse[,] ellipses = new Ellipse[101,101];
         ScaleTransform st = new ScaleTransform();
+        Dictionary<string, Tuple<int, int>> idPosition = new Dictionary<string, Tuple<int, int>>();
+        int[,] visitedmap;
+        List<LineMapEntity> allLines;
+        struct direction
+        {
+            public int x;
+            public int y;
+        };
+        static direction[] directions = {
+                                       new direction(){x = 1, y = 0},
+                                       new direction(){x = 0, y = 1},
+                                       new direction(){x = -1, y = 0},
+                                       new direction(){x = 0, y = -1}
+        };
+
         public MainWindow()
         {
             InitializeComponent();
@@ -32,6 +48,8 @@ namespace Projekat3
         
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            allLines = new List<LineMapEntity>();
+            visitedmap = resetVisitedMap();
             subs = Deserializer.DeserializeSubs();
             translateSubs();
             translateNodes();
@@ -57,13 +75,15 @@ namespace Projekat3
                     Canvas.SetLeft(ellipses[i, j], x);
                     x = x + 6;
                     map.Children.Add(ellipses[i,j]);
+                    
                 }
                 x = -2;
                 y = y + 6;
             }
-            map.RenderTransform = st;
+            map.LayoutTransform = st;
 
             addDots();
+            AddLines();
             /*myEllipse.Visibility = Visibility.Visible;
             myEllipse.Fill = Brushes.Red;
             myEllipse.StrokeThickness = 1;
@@ -87,31 +107,12 @@ namespace Projekat3
             int subblen = subs.SubstationEntities.Length;
             double xD = 0;
             double yD = 0;
-            double maxY = 10;
-            double minY = 25;
-            double maxX = 30;
-            double minX = 60;
             for (int i = 0; i < subblen; i++)
             {
                 UTMtoDec.ToLatLon(subs.SubstationEntities[i].X, subs.SubstationEntities[i].Y, 34, out xD, out yD);
                 subs.SubstationEntities[i].X = xD;
                 subs.SubstationEntities[i].Y = yD;
-                if (xD > maxX)
-                {
-                    maxX = xD;
-                }
-                if (xD < minX)
-                {
-                    minX = xD;
-                }
-                if(yD > maxY)
-                {
-                    maxY = yD;
-                }
-                if(yD < minY)
-                {
-                    minY = yD;
-                }
+                
             }
 
         }
@@ -120,32 +121,11 @@ namespace Projekat3
             int nodlen = subs.NodesEntities.Length;
             double xD = 0;
             double yD = 0;
-            double maxY = 10;
-            double minY = 25;
-            double maxX = 30;
-            double minX = 60;
             for (int i = 0; i < nodlen; i++)
             {
                 UTMtoDec.ToLatLon(subs.NodesEntities[i].X, subs.NodesEntities[i].Y, 34, out xD, out yD);
                 subs.NodesEntities[i].X = xD;
                 subs.NodesEntities[i].Y = yD;
-
-                if (xD > maxX)
-                {
-                    maxX = xD;
-                }
-                if (xD < minX)
-                {
-                    minX = xD;
-                }
-                if (yD > maxY)
-                {
-                    maxY = yD;
-                }
-                if (yD < minY)
-                {
-                    minY = yD;
-                }
             }
         }
         private void translateSwitch()
@@ -153,32 +133,11 @@ namespace Projekat3
             int swtchlen = subs.SwitchEntities.Length;
             double xD = 0;
             double yD = 0;
-            double maxY = 10;
-            double minY = 25;
-            double maxX = 30;
-            double minX = 60;
             for (int i = 0; i < swtchlen; i++)
             {
                 UTMtoDec.ToLatLon(subs.SwitchEntities[i].X, subs.SwitchEntities[i].Y, 34, out xD, out yD);
                 subs.SwitchEntities[i].X = xD;
                 subs.SwitchEntities[i].Y = yD;
-
-                if (xD > maxX)
-                {
-                    maxX = xD;
-                }
-                if (xD < minX)
-                {
-                    minX = xD;
-                }
-                if (yD > maxY)
-                {
-                    maxY = yD;
-                }
-                if (yD < minY)
-                {
-                    minY = yD;
-                }
             }
         }
         private void translatePoint()
@@ -240,7 +199,7 @@ namespace Projekat3
             counter = 0;
             tempY = y - minY;
             dotY = (int)(tempY / Y);
-            tempX = x - minX;
+            tempX = maxX - x;// - minX;
             dotX = (int)(tempX / X);
             if (ellipses[dotX, dotY].IsVisible)
             {
@@ -251,9 +210,10 @@ namespace Projekat3
                         if (ellipses[dotX - counter, dotY].Visibility ==  Visibility.Collapsed)
                         {
                             ellipses[dotX - counter, dotY].Visibility = Visibility.Visible;
-                            ellipses[dotX - counter, dotY].ToolTip = String.Format("ID:" + id + "\n" + "Name:" + name);
+                            ellipses[dotX - counter, dotY].ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
                             ellipses[dotX - counter, dotY].Fill = brush;
                             ellipses[dotX - counter, dotY].Stroke = brush;
+                            idPosition.Add(id, new Tuple<int, int>(dotX - counter, dotY));
                             check = false;
                             continue;
                         }
@@ -263,9 +223,10 @@ namespace Projekat3
                         if (ellipses[dotX, dotY - counter].Visibility == Visibility.Collapsed)
                         {
                             ellipses[dotX, dotY - counter].Visibility = Visibility.Visible;
-                            ellipses[dotX, dotY - counter].ToolTip = String.Format("ID:" + id + "\n" + "Name:" + name);
+                            ellipses[dotX, dotY - counter].ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
                             ellipses[dotX, dotY - counter].Fill = brush;
                             ellipses[dotX, dotY - counter].Stroke = brush;
+                            idPosition.Add(id, new Tuple<int, int>(dotX, dotY - counter));
                             check = false;
                             continue;
                         }
@@ -275,9 +236,10 @@ namespace Projekat3
                         if (ellipses[dotX + counter, dotY].Visibility == Visibility.Collapsed)
                         {
                             ellipses[dotX + counter, dotY].Visibility = Visibility.Visible;
-                            ellipses[dotX + counter, dotY].ToolTip = String.Format("ID:" + id + "\n" + "Name:" + name);
+                            ellipses[dotX + counter, dotY].ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
                             ellipses[dotX + counter, dotY].Fill = brush;
                             ellipses[dotX + counter, dotY].Stroke = brush;
+                            idPosition.Add(id, new Tuple<int, int>(dotX + counter, dotY));
                             check = false;
                             continue;
                         }
@@ -287,9 +249,10 @@ namespace Projekat3
                         if (ellipses[dotX, dotY + counter].Visibility == Visibility.Collapsed)
                         {
                             ellipses[dotX, dotY + counter].Visibility = Visibility.Visible;
-                            ellipses[dotX, dotY + counter].ToolTip = String.Format("ID:" + id + "\n" + "Name:" +name);
+                            ellipses[dotX, dotY + counter].ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" +name);
                             ellipses[dotX, dotY + counter].Fill = brush;
                             ellipses[dotX, dotY + counter].Stroke = brush;
+                            idPosition.Add(id, new Tuple<int, int>(dotX, dotY + counter));
                             check = false;
                             continue;
                         }
@@ -300,9 +263,10 @@ namespace Projekat3
             else
             {
                 ellipses[dotX, dotY].Visibility = Visibility.Visible;
-                ellipses[dotX, dotY].ToolTip = String.Format("ID:" +id + "\n" + "Name:" + name);
+                ellipses[dotX, dotY].ToolTip = String.Format("ID:_" +id + "_\n" + "Name:" + name);
                 ellipses[dotX, dotY].Fill = brush;
                 ellipses[dotX, dotY].Stroke = brush;
+                idPosition.Add(id, new Tuple<int, int>(dotX, dotY));
             }
         }
 
@@ -318,6 +282,143 @@ namespace Projekat3
                 st.ScaleX /= 2;
                 st.ScaleY /= 2;
             }
+        }
+
+        private void AddLines()
+        {
+            foreach(LineEntity line in subs.LineEntities)
+            {
+                if (!idPosition.ContainsKey(line.FirstEnd) || !idPosition.ContainsKey(line.SecondEnd))
+                {
+                    continue;
+                }
+
+                Position startPosition = new Position();
+                startPosition.row = idPosition[line.FirstEnd].Item1;
+                startPosition.col = idPosition[line.FirstEnd].Item2;
+                startPosition.parent = null;
+
+                string endPosition = line.SecondEnd;
+                startPosition = BFS(startPosition, ellipses, endPosition);
+
+                while (startPosition != null)
+                {
+
+                    if (startPosition.parent == null)
+                    {
+                        break;
+                    }
+
+                    int y1 = startPosition.row * 6;
+                    int x1 = startPosition.col * 6;
+                    int y2 = startPosition.parent.row * 6;
+                    int x2 = startPosition.parent.col *6;
+
+                    bool lineExists = false;
+
+                    foreach (LineMapEntity myLine in allLines)
+                    {
+                        if (myLine.X1 == x1 && myLine.Y1 == y1 && myLine.X2 == x2 && myLine.Y2 == y2)
+                        {
+                            lineExists = true;
+                            break;
+                        }
+                    }
+                    foreach(LineMapEntity myLine in allLines)
+                    {
+
+                    }
+
+                    if (!lineExists)
+                    {
+                        Line l = new Line();
+                        l.Stroke = Brushes.Orange;
+                        l.X1 = x1;
+                        l.Y1 = y1;
+
+                        l.X2 = x2;
+                        l.Y2 = y2;
+                        l.StrokeThickness = 1;
+
+                        allLines.Add(new LineMapEntity(l.X1, l.Y1, l.X2, l.Y2));
+                        map.Children.Add(l);
+
+                    }
+                    startPosition = startPosition.parent;
+                }
+            }
+        }
+        private Position BFS(Position present, Ellipse[,] map, string who)
+        {
+            Position[] poses = new Position[] { present };
+            bool found = false;
+            while (!found)
+            {
+                foreach(Position pos in poses)
+                {
+                       /* string[] id = ellipses[pos.row, pos.col].ToolTip.ToString().Split('_');
+                        if (id[1].Equals(who))
+                        {
+                            visitedmap = resetVisitedMap();
+                            return pos;
+                        }*/
+                    if(idPosition[who].Item1 == pos.row && idPosition[who].Item2 == pos.col)
+                    {
+                        visitedmap = resetVisitedMap();
+                        return pos;
+                    }
+                        
+                }
+                poses = cellsNear(poses);
+            }
+            return present;
+        }
+
+        private int[,] resetVisitedMap()
+        {
+            int[,] returnArray = new int[101, 101];
+
+            for (int i = 0; i < 101; i++)
+            {
+                for (int j = 0; j < 101; j++)
+                {
+                    returnArray[i, j] = 0;
+                }
+            }
+
+            return returnArray;
+        }
+        private bool visited(int row, int col)
+        {
+            return visitedmap[row, col] == 1;
+        }
+        private Position[] cellsNear(Position pos)
+        {
+            List<Position> result = new List<Position>(); // lista putanje
+            foreach (direction dir in directions)   //kroz sva 4 pavca
+            {
+                int rowCalculated = pos.row + dir.x;
+                int colCalculated = pos.col + dir.y;
+                if (rowCalculated >= 0 && colCalculated >= 0 && rowCalculated < ellipses.GetLength(0) && colCalculated < ellipses.GetLength(1) && !visited(rowCalculated, colCalculated))
+                {
+                    visitedmap[rowCalculated, colCalculated] = 1;
+                    Position posPath = new Position();
+                    posPath.col = colCalculated;
+                    posPath.row = rowCalculated;
+                    posPath.parent = pos;
+                    result.Add(posPath);
+                }
+            }
+            return result.ToArray();    //gore, levo, dole, desno
+        }
+        private Position[] cellsNear(Position[] poses)
+        {
+            List<Position> result = new List<Position>();
+            foreach (Position pos in poses)
+            {
+                result.AddRange(cellsNear(pos));
+            }
+            return result.ToArray();
         }
     }
 }

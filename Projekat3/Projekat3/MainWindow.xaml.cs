@@ -25,7 +25,7 @@ namespace Projekat3
     {
         Substations subs;
         //Ellipse[,] ellipses = new Ellipse[301,301];
-        bool[,] ellipsesBool = new bool[301, 301];
+        GraphNode[,] ellipsesBool = new GraphNode[301, 301];
         ScaleTransform st = new ScaleTransform();
         Dictionary<string, Tuple<int, int>> idPosition = new Dictionary<string, Tuple<int, int>>();
         int[,] visitedmap;
@@ -79,11 +79,9 @@ namespace Projekat3
                     x = x + 6;
                     map.Children.Add(ellipses[i,j]);
                     */
-                    ellipsesBool[i, j] = false;
+                    ellipsesBool[i, j] = new GraphNode();
                     
                 }
-                x = -2;
-                y = y + 6;
             }
             map.LayoutTransform = st;
 
@@ -206,16 +204,16 @@ namespace Projekat3
             dotY = (int)(tempY / Y);
             tempX = maxX - x;// - minX;
             dotX = (int)(tempX / X);
-            if (ellipsesBool[dotX, dotY])
+            if (ellipsesBool[dotX, dotY].Element)
             {
                 while (check)
                 {
                     if (dotX - counter >= 0)
                     {
-                        if (!ellipsesBool[dotX - counter, dotY])
+                        if (!ellipsesBool[dotX - counter, dotY].Element)
                         {
                             Ellipse ellipse = new Ellipse();
-                            ellipsesBool[dotX - counter, dotY] = true;
+                            ellipsesBool[dotX - counter, dotY].Element = true;
                             ellipse.ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
                             ellipse.Fill = brush;
                             ellipse.Stroke = brush;
@@ -232,10 +230,10 @@ namespace Projekat3
                     }
                     if (dotY - counter >= 0)
                     {
-                        if (!ellipsesBool[dotX, dotY - counter])
+                        if (!ellipsesBool[dotX, dotY - counter].Element)
                         {
                             Ellipse ellipse = new Ellipse();
-                            ellipsesBool[dotX, dotY-counter] = true;
+                            ellipsesBool[dotX, dotY-counter].Element = true;
                             ellipse.ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
                             ellipse.Fill = brush;
                             ellipse.Stroke = brush;
@@ -252,10 +250,10 @@ namespace Projekat3
                     }
                     if (dotX + counter <= 300)
                     {
-                        if (!ellipsesBool[dotX + counter, dotY])
+                        if (!ellipsesBool[dotX + counter, dotY].Element)
                         {
                             Ellipse ellipse = new Ellipse();
-                            ellipsesBool[dotX + counter, dotY] = true;
+                            ellipsesBool[dotX + counter, dotY].Element = true;
                             ellipse.ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
                             ellipse.Fill = brush;
                             ellipse.Stroke = brush;
@@ -272,10 +270,10 @@ namespace Projekat3
                     }
                     if (dotY + counter <= 300)
                     {
-                        if (!ellipsesBool[dotX, dotY + counter])
+                        if (!ellipsesBool[dotX, dotY + counter].Element)
                         {
                             Ellipse ellipse = new Ellipse();
-                            ellipsesBool[dotX, dotY + counter] = true;
+                            ellipsesBool[dotX, dotY + counter].Element = true;
                             ellipse.ToolTip = String.Format("ID:_" + id + "_\n" + "Name:" + name);
                             ellipse.Fill = brush;
                             ellipse.Stroke = brush;
@@ -296,7 +294,7 @@ namespace Projekat3
             else
             {
                 Ellipse ellipse = new Ellipse();
-                ellipsesBool[dotX, dotY] = true;
+                ellipsesBool[dotX, dotY].Element = true;
                 ellipse.ToolTip = String.Format("ID:_" +id + "_\n" + "Name:" + name);
                 ellipse.Fill = brush;
                 ellipse.Stroke = brush;
@@ -385,6 +383,65 @@ namespace Projekat3
 
                         allLines.Add(new LineMapEntity(l.X1, l.Y1, l.X2, l.Y2));
                         map.Children.Add(l);
+
+                        int yy1 = startPosition.row;
+                        int xx1 = startPosition.col;
+                        int yy2 = startPosition.parent.row;
+                        int xx2 = startPosition.parent.col;
+
+                        if (!ellipsesBool[yy1, xx1].Element && ellipsesBool[yy1, xx1].Visited)
+                        {
+                            if (!ellipsesBool[yy1, xx1].VisitedIds.Contains(line.Id))
+                            {
+                                Ellipse ellipse = new Ellipse
+                                {
+                                    ToolTip = String.Format("Interception"),
+                                    Fill = System.Windows.Media.Brushes.Black,
+                                    Stroke = System.Windows.Media.Brushes.Black,
+                                    Width = 4,
+                                    Height = 4
+                                };
+                                Canvas.SetTop(ellipse, yy1 * 6 - 2);
+                                Canvas.SetLeft(ellipse, xx1 * 6 - 2);
+                                map.Children.Add(ellipse);
+                                ellipsesBool[yy1, xx1].VisitedIds.Add(line.Id);
+                            }
+                        }
+                        else
+                        {
+                            if (!ellipsesBool[yy1, xx1].Element && !ellipsesBool[yy1, xx1].Visited)
+                            {
+                                ellipsesBool[yy1, xx1].Visited = true;
+                                ellipsesBool[yy1, xx1].VisitedIds.Add(line.Id);
+                            }
+                        }
+
+                        if (!ellipsesBool[yy2, xx2].Element && ellipsesBool[yy2, xx2].Visited)
+                        {
+                            if (!ellipsesBool[yy2, xx2].VisitedIds.Contains(line.Id))
+                            {
+                                Ellipse ellipse = new Ellipse
+                                {
+                                    ToolTip = String.Format("Interception"),
+                                    Fill = System.Windows.Media.Brushes.Black,
+                                    Stroke = System.Windows.Media.Brushes.Black,
+                                    Width = 4,
+                                    Height = 4
+                                };
+                                Canvas.SetTop(ellipse, yy2 * 6 - 2);
+                                Canvas.SetLeft(ellipse, xx2 * 6 - 2);
+                                map.Children.Add(ellipse);
+                                ellipsesBool[yy2, xx2].VisitedIds.Add(line.Id);
+                            }
+                        }
+                        else
+                        {
+                            if (!ellipsesBool[yy2, xx2].Element && !ellipsesBool[yy2, xx2].Visited)
+                            {
+                                ellipsesBool[yy2, xx2].Visited = true;
+                                ellipsesBool[yy2, xx2].VisitedIds.Add(line.Id);
+                            }
+                        }
 
                     }
                     startPosition = startPosition.parent;
